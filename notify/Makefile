@@ -5,7 +5,7 @@
 
 include $(GOROOT)/src/Make.inc
 
-TARG = notify
+TARG = github.com/lenormf/go-notify/notify
 
 CGOFILES =\
 	  notify.go
