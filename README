@@ -1,0 +1,6 @@
+
+go-notify
+
+This package provides GO bindings for the C library libnotify.
+Although this package provides full retro-compatibility with the regular C
+library, it also provides OOP-like functions for the NotifyNotification object.
