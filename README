@@ -1,6 +1,11 @@
 
 go-notify
 
+C Dependencies: libnotify
+GO Dependencies: github.com/mattn/go-gtk/glib
+
 This package provides GO bindings for the C library libnotify.
 Although this package provides full retro-compatibility with the regular C
 library, it also provides OOP-like functions for the NotifyNotification object.
+
+The notify package depends on mattn's glib wrapper for the GO language.
