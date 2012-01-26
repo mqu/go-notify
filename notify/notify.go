@@ -13,18 +13,13 @@ package notify
 */
 import "C"
 import "unsafe"
+import glib "github.com/mattn/go-gtk/glib"
 
 /*
  * Exported Types
  */
 type NotifyNotification struct {
 	_notification *C.NotifyNotification
-}
-
-type GError struct {
-	domain uint32
-	code int
-	message string
 }
 
 const (
@@ -45,16 +40,6 @@ func new_notify_notification(cnotif *C.NotifyNotification) *NotifyNotification {
 	notif._notification = cnotif
 
 	return notif
-}
-
-func new_gerror(cgerror *C.GError) *GError {
-	gerror := new(GError)
-
-	gerror.domain = uint32(cgerror.domain)
-	gerror.code = int(cgerror.code)
-	gerror.message = C.GoString((*C.char)(cgerror.message))
-
-	return gerror
 }
 
 /*
@@ -139,15 +124,11 @@ func NotificationUpdate(notif *NotifyNotification, summary, body, icon string) b
 	return C.notify_notification_update(notif._notification, psummary, pbody, picon) != 0
 }
 
-func NotificationShow(notif *NotifyNotification) *GError {
+func NotificationShow(notif *NotifyNotification) *glib.Error {
 	var err *C.GError
-	C.notify_notification_show(notif._notification, (**C.GError)(&err))
+	C.notify_notification_show(notif._notification, &err)
 
-	if err != nil {
-		return new_gerror(err)
-	}
-
-	return nil
+	return glib.ErrorFromNative(unsafe.Pointer(err))
 }
 
 func NotificationSetTimeout(notif *NotifyNotification, timeout int32) {
@@ -222,16 +203,12 @@ func NotificationClearActions(notif *NotifyNotification) {
 	C.notify_notification_clear_actions(notif._notification)
 }
 
-func NotificationClose(notif *NotifyNotification) *GError {
+func NotificationClose(notif *NotifyNotification) *glib.Error {
 	var err *C.GError
 
-	C.notify_notification_close(notif._notification, (**C.GError)(&err))
+	C.notify_notification_close(notif._notification, &err)
 
-	if err != nil {
-		return new_gerror(err)
-	}
-
-	return nil
+	return glib.ErrorFromNative(unsafe.Pointer(err))
 }
 
 // Member Functions
@@ -239,8 +216,8 @@ func (this *NotifyNotification) Update(summary, body, icon string) bool {
 	return NotificationUpdate(this, summary, body, icon)
 }
 
-func (this *NotifyNotification) Show() {
-	NotificationShow(this)
+func (this *NotifyNotification) Show() *glib.Error {
+	return NotificationShow(this)
 }
 
 func (this *NotifyNotification) SetTimeout(timeout int32) {
@@ -291,6 +268,6 @@ func (this *NotifyNotification) ClearActions() {
 	NotificationClearActions(this)
 }
 
-func (this *NotifyNotification) Close() *GError {
+func (this *NotifyNotification) Close() *glib.Error {
 	return NotificationClose(this)
 }
