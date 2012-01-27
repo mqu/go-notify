@@ -35,11 +35,7 @@ type NotifyActionCallback func (*NotifyNotification, string, interface {})
  * Private Functions
  */
 func new_notify_notification(cnotif *C.NotifyNotification) *NotifyNotification {
-	notif := new(NotifyNotification)
-
-	notif._notification = cnotif
-
-	return notif
+	return &NotifyNotification{cnotif}
 }
 
 /*
@@ -65,19 +61,12 @@ func GetAppName() string {
 	return C.GoString(C.notify_get_app_name())
 }
 
-func GetServerCaps() []string {
-	var caps []string
+func GetServerCaps() *glib.List {
 	var gcaps *C.GList
 
 	gcaps = C.notify_get_server_caps()
-	if gcaps == nil {
-		return nil
-	}
-	for ; gcaps != nil; gcaps = gcaps.next {
-		caps = append(caps, C.GoString((*C.char)(gcaps.data)))
-	}
 
-	return caps
+	return glib.ListFromNative(unsafe.Pointer(gcaps))
 }
 
 func GetServerInfo(name, vendor, version, spec_version *string) bool {
@@ -146,10 +135,6 @@ func NotificationSetUrgency(notif *NotifyNotification, urgency NotifyUrgency) {
 	C.notify_notification_set_urgency(notif._notification, C.NotifyUrgency(urgency))
 }
 
-// FIXME: implement
-func NotificationSetHint(notif *NotifyNotification, key string, value interface {}) {
-}
-
 func NotificationSetHintInt32(notif *NotifyNotification, key string, value int32) {
 	pkey := C.CString(key)
 	defer C.free(unsafe.Pointer(pkey))
@@ -157,7 +142,7 @@ func NotificationSetHintInt32(notif *NotifyNotification, key string, value int32
 	C.notify_notification_set_hint_int32(notif._notification, pkey, C.gint(value))
 }
 
-func NotificationSetHintDouble(notif *NotifyNotification, key string, value float32) {
+func NotificationSetHintDouble(notif *NotifyNotification, key string, value float64) {
 	pkey := C.CString(key)
 	defer C.free(unsafe.Pointer(pkey))
 
@@ -188,6 +173,15 @@ func NotificationSetHintByteArray(notif *NotifyNotification, key string, value [
 	defer C.free(unsafe.Pointer(pkey))
 
 	// C.notify_notification_set_hint_byte_array(notif._notification, pkey, (*C.guchar)(value), C.gsize(len))
+}
+
+func NotificationSetHint(notif *NotifyNotification, key string, value interface {}) {
+	switch value.(type) {
+		case int32: NotificationSetHintInt32(notif, key, value.(int32))
+		case float64: NotificationSetHintDouble(notif, key, value.(float64))
+		case string: NotificationSetHintString(notif, key, value.(string))
+		case byte: NotificationSetHintByte(notif, key, value.(byte))
+	}
 }
 
 func NotificationClearHints(notif *NotifyNotification) {
@@ -232,15 +226,11 @@ func (this *NotifyNotification) SetUrgency(urgency NotifyUrgency) {
 	NotificationSetUrgency(this, urgency)
 }
 
-func (this *NotifyNotification) SetHint(key string, value interface {}) {
-	NotificationSetHint(this, key, value)
-}
-
 func (this *NotifyNotification) SetHintInt32(key string, value int32) {
 	NotificationSetHintInt32(this, key, value)
 }
 
-func (this *NotifyNotification) SetHintDouble(key string, value float32) {
+func (this *NotifyNotification) SetHintDouble(key string, value float64) {
 	NotificationSetHintDouble(this, key, value)
 }
 
@@ -254,6 +244,10 @@ func (this *NotifyNotification) SetHintByte(key string, value byte) {
 
 func (this *NotifyNotification) SetHintByteArray(key string, value []byte, len uint32) {
 	NotificationSetHintByteArray(this, key, value, len)
+}
+
+func (this *NotifyNotification) SetHint(key string, value interface {}) {
+	NotificationSetHint(this, key, value)
 }
 
 func (this *NotifyNotification) ClearHints() {
