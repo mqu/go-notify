@@ -91,13 +91,18 @@ func NotificationNew(title, text, image string) *NotifyNotification {
 	ptitle := C.CString(title)
 	ptext := C.CString(text)
 	pimage := C.CString(image)
+	ntext := C.g_utf8_normalize((*C.gchar)(ptext), -1, C.G_NORMALIZE_DEFAULT)
 	defer func() {
 		C.free(unsafe.Pointer(ptitle))
 		C.free(unsafe.Pointer(ptext))
 		C.free(unsafe.Pointer(pimage))
+
+		if ntext != nil {
+			C.free(unsafe.Pointer(ntext))
+		}
 	}()
 
-	return new_notify_notification(C.notify_notification_new(ptitle, ptext, pimage))
+	return new_notify_notification(C.notify_notification_new(ptitle, (*C.char)(ntext), pimage))
 }
 
 func NotificationUpdate(notif *NotifyNotification, summary, body, icon string) bool {
