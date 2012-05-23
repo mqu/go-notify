@@ -5,7 +5,7 @@
 
 package main
 
-import notify "github.com/lenormf/go-notify/notify"
+import notify "github.com/mqu/go-notify"
 import (
 	"os"
 	"fmt"
